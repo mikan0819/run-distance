@@ -82,7 +82,25 @@
 
   <script>
     // 地図初期化
-    const map = L.map('map').setView([35.681236, 139.767125], 15);
+    // 地図を初期表示（GPS対応）
+const map = L.map('map');
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      map.setView([lat, lng], 16);
+    },
+    () => {
+      // 位置取得できなかったら東京駅
+      map.setView([35.681236, 139.767125], 15);
+    }
+  );
+} else {
+  // GPS非対応端末用
+  map.setView([35.681236, 139.767125], 15);
+}
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
