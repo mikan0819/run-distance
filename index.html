@@ -93,18 +93,17 @@ if (navigator.geolocation) {
       map.setView([lat, lng], 16);
     },
     () => {
-      // 位置取得できなかったら東京駅
       map.setView([35.681236, 139.767125], 15);
     }
   );
 } else {
-  // GPS非対応端末用
   map.setView([35.681236, 139.767125], 15);
 }
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { attribution: '© OpenStreetMap contributors' }
+).addTo(map);
 
     let points = [];
     let lines = [];
