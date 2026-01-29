@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>距離なぞり計測</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+
+    /* 距離表示 */
+    #distance {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 18px;
+      z-index: 1000;
+    }
+
+    /* ボタン共通 */
+    .btn {
+      position: fixed;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      z-index: 1000;
+      user-select: none;
+    }
+
+    #undo {
+      top: 10px;
+      right: 10px;
+    }
+
+    #unit {
+      bottom: 10px;
+      right: 10px;
+    }
+
+    #reset {
+      bottom: 10px;
+      left: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <div id="distance">0 m</div>
+  <div id="undo" class="btn">↩︎</div>
+  <div id="unit" class="btn">m/km</div>
+  <div id="reset" class="btn">×</div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // 地図初期化
+    const map = L.map('map').setView([35.681236, 139.767125], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let points = [];
+    let lines = [];
+    let totalDistance = 0;
+    let useKm = false;
+
+    const distanceEl = document.getElementById('distance');
+
+    function updateDistance() {
+      if (useKm) {
+        distanceEl.textContent = (totalDistance / 1000).toFixed(2) + ' km';
+      } else {
+        distanceEl.textContent = Math.round(totalDistance) + ' m';
+      }
+    }
+
+    function calcDistance(p1, p2) {
+      return map.distance(p1, p2);
+    }
+
+    // なぞり開始
+    map.on('mousedown touchstart', (e) => {
+      points.push(e.latlng);
+    });
+
+    // なぞり中
+    map.on('mousemove touchmove', (e) => {
+      if (points.length === 0) return;
+
+      const last = points[points.length - 1];
+      const current = e.latlng;
+      const dist = calcDistance(last, current);
+
+      totalDistance += dist;
+      updateDistance();
+
+      const line = L.polyline([last, current], { color: 'red' }).addTo(map);
+      lines.push(line);
+      points.push(current);
+    });
+
+    // 1つ戻る
+    document.getElementById('undo').onclick = () => {
+      if (lines.length === 0) return;
+
+      const lastLine = lines.pop();
+      const latlngs = lastLine.getLatLngs();
+      totalDistance -= calcDistance(latlngs[0], latlngs[1]);
+
+      map.removeLayer(lastLine);
+      points.pop();
+      updateDistance();
+    };
+
+    // リセット
+    document.getElementById('reset').onclick = () => {
+      lines.forEach(line => map.removeLayer(line));
+      lines = [];
+      points = [];
+      totalDistance = 0;
+      updateDistance();
+    };
+
+    // 単位切り替え
+    document.getElementById('unit').onclick = () => {
+      useKm = !useKm;
+      updateDistance();
+    };
+  </script>
+</body>
+</html>
