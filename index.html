@@ -84,13 +84,28 @@
     // 地図初期化
     // 地図を初期表示（GPS対応）
 const map = L.map('map');
+    let currentLocationMarker = null;
 
 if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      map.setView([lat, lng], 16);
+  (position) => {
+  const lat = position.coords.latitude;
+  const lng = position.coords.longitude;
+
+  map.setView([lat, lng], 16);
+
+  // すでにマーカーがあれば消す
+  if (currentLocationMarker) {
+    map.removeLayer(currentLocationMarker);
+  }
+
+  // 現在地マーカー（青い点）
+  currentLocationMarker = L.circleMarker([lat, lng], {
+    radius: 8,
+    color: '#007AFF',
+    fillColor: '#007AFF',
+    fillOpacity: 1
+  }).addTo(map);
+}
     },
     () => {
       map.setView([35.681236, 139.767125], 15);
